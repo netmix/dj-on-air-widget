@@ -1,17 +1,38 @@
 <?php
 /**
 * @package DJ_On_Air_Widget
-* @version 0.0.1
+* @version 0.2
 */
 /*
 Plugin Name: DJ On Air Widget
 Plugin URI: http://nlb-creations.com/2011/09/02/wordpress-plugin-dj-on-air-widget/
 Description: This plugin adds additional fields to user profiles to designate users as DJs and provide shift scheduling.
 Author: Nikki Blight <nblight@nlb-creations.com>
-Version: 0.1
+Version: 0.2
 Author URI: http://www.nlb-creations.com
 */
 
+global $defaultOptionVals;
+
+//set the default options, or, if they've already been customized, load the options.
+function set_globals() {
+	global $defaultOptionVals;
+	
+	$options = get_option('dj_access_roles');
+	
+	if(!$options) {
+		$defaultOptionVals = array(
+			'roles' => array('administrator')
+		);
+		update_option('dj_access_roles', $defaultOptionVals);
+	}
+	else {
+		$defaultOptionVals = $options;
+	}
+}
+add_action( 'init', 'set_globals' );
+
+//add the stylesheet to the frontend theme
 if ( !is_admin() ) {
 	$dir = WP_PLUGIN_URL.'/'.str_replace(basename( __FILE__),"",plugin_basename(__FILE__));
 	wp_enqueue_style( 'dj-on-air', $dir.'/styles/djonair.css' );
@@ -25,7 +46,12 @@ add_action( 'edit_user_profile', 'dj_show_extra_profile_fields' );
 * Code adapted from http://wordpress.stackexchange.com/questions/19838/create-more-meta-boxes-as-needed/19852#19852
 * and http://justintadlock.com/archives/2009/09/10/adding-and-using-custom-user-profile-fields
 */
-function dj_show_extra_profile_fields( $user ) { ?>
+function dj_show_extra_profile_fields( $user ) { 
+	if(!hasPluginAccess()) {
+		return false;
+	}
+	?>
+	
 
 	<h3>Additional profile information</h3>
 	<?php 
@@ -173,7 +199,6 @@ function dj_save_extra_profile_fields( $user_id ) {
 }
 
 /* Sidebar widget functions */
-
 class DJ_Widget extends WP_Widget {
 	
 	function DJ_Widget() {
@@ -311,6 +336,105 @@ class DJ_Widget extends WP_Widget {
  
 		echo $after_widget;
 	}
+}
+
+/* Admin Functions */
+
+//check to see if the user has access to make changes
+function hasPluginAccess() {
+	global $user_ID;
+	global $defaultOptionVals;
+	
+	//ensure we have a logged in user
+	if (!empty($user_ID)) {
+		$user = new WP_User($user_ID);
+		
+		if (!is_array($user->roles)) $user->roles = array($user->roles);
+		foreach ($user->roles as $role) {
+			if (in_array($role, $defaultOptionVals['roles'])) {
+				return true;
+			}
+		}
+	}
+	 
+	return false;
+}
+
+//create a menu item for the options page
+function admin_menu() {
+	if (function_exists('add_options_page')) {
+		add_options_page('DJ On-Air Options', 'DJ On-Air', 'manage_options', 'dj-on-air-widget', 'admin_options');
+	}
+}
+add_action( 'init', 'admin_menu' );
+
+//output the options page
+function admin_options() {
+	global $defaultOptionVals;
+	
+	
+	//grab the array of all user roles
+	$roles = new WP_Roles();
+	$roles = array_keys($roles->role_names);
+ 
+  	//watch for form submission
+	if (!empty($_POST['dj_access_roles'])) {
+    	//validate the referer
+		check_admin_referer('dj_access_roles_options_valid');
+ 
+		if (empty($_POST['dj_access_roles'])) {
+			echo '<div id="message" class="updated fade"><p><strong>' . __('You must select at least one role for this application to be properly enabled.') . '</strong></p></div>';
+			return false;
+		}
+ 
+    	//update the new value
+		$defaultOptionVals['roles'] = $_POST['dj_access_roles'];
+ 
+		//update options settings
+		update_option('dj_access_roles', $defaultOptionVals);
+ 
+		//show success
+		echo '<div id="message" class="updated fade"><p><strong>' . __('Your configuration settings have been saved.') . '</strong></p></div>';
+	}
+ 
+	//display the admin options page
+?>
+ 
+<div style="width: 620px; padding: 10px">
+	<h2><?php _e('DJ On-air Options'); ?></h2>
+	<form action="" method="post" id="me_likey_form" accept-charset="utf-8" style="position:relative">
+		<?php wp_nonce_field('dj_access_roles_options_valid'); ?>
+		<input type="hidden" name="action" value="update" />
+		<table class="form-table">
+			<tr valign="top">
+				<th scope="row">User Role Restriction*</th>
+				<td>
+					<select name="dj_access_roles[]" id="dj_access_roles" multiple="multiple" style="height: 150px;">
+					<?php
+						if (!empty($roles)) {
+							foreach ($roles as $role) {
+								echo '<option value="' . $role . '"' . (in_array($role, $defaultOptionVals['roles']) ? ' selected="selected"' : '') . '>' . $role . '</option>';
+							}
+						}
+					?>
+					</select>
+				</td>
+			</tr>
+			<tr valign="top">
+				<th scope="row">&nbsp;</th>
+					<td>Please select all user roles that should be allowed to add DJ schedules to user accounts.</td>
+			</tr>
+			<tr valign="top">
+				<th scope="row">&nbsp;</th>
+				<td>
+					<input type="submit" name="Submit" class="button-primary" value="<?php _e('Save Changes') ?>"/>
+				</td>
+			</tr>
+		</table>
+	</form>
+</div>
+ 
+<?php
 }
 
 add_action( 'widgets_init', create_function('', 'return register_widget("DJ_Widget");') );

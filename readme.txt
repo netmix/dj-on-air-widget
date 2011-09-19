@@ -20,6 +20,10 @@ The DJ On-Air Widget adds a "Dj Shifts" field to user profiles that allows the t
 
 == Frequently Asked Questions ==
 
+= Can I set it so that only certain roles can add schedules to user accounts?  I don't want Subscribers to start adding themselves to the widget. =
+
+Yes, as of version 0.2.  The options page is under the Settings tab.
+
 = I don't like the way the sidebar widget is styled.  Can I change it? =
 
 Yes.  Just edit the /dj-on-air/styles/djonair.css file and change whatever you want.
@@ -33,6 +37,9 @@ In the user profile.  It's the same avatar that's assigned to the user's account
 Yes.  If two users are scheduled for the same hour on the same day, they will both show up in the widget.
 
 == Changelog ==
+
+= 0.2 =
+* Added the ability to limit addition/removal of DJ schedules by role.
 
 = 0.1 =
 * Initial release
