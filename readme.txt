@@ -38,6 +38,9 @@ Yes.  If two users are scheduled for the same hour on the same day, they will bo
 
 == Changelog ==
 
+= 0.2.1 =
+* Fixed a bug that was causing problems with schedules before 10am
+
 = 0.2 =
 * Added the ability to limit addition/removal of DJ schedules by role.
 
@@ -45,6 +48,9 @@ Yes.  If two users are scheduled for the same hour on the same day, they will bo
 * Initial release
 
 == Upgrade Notice ==
+
+= 0.2.1 =
+* Fixed a bug that was causing problems with schedules before 10am
 
 = 0.1 =
 * Initial release

@@ -8,7 +8,7 @@ Plugin Name: DJ On Air Widget
 Plugin URI: http://nlb-creations.com/2011/09/02/wordpress-plugin-dj-on-air-widget/
 Description: This plugin adds additional fields to user profiles to designate users as DJs and provide shift scheduling.
 Author: Nikki Blight <nblight@nlb-creations.com>
-Version: 0.2
+Version: 0.2.1
 Author URI: http://www.nlb-creations.com
 */
 
@@ -266,7 +266,7 @@ class DJ_Widget extends WP_Widget {
 		global $wpdb;
 		
 		//get the current time
-		$now = date('G', strtotime(current_time("mysql", $gmt)));
+		$now = date('H', strtotime(current_time("mysql", $gmt)));
 		$curDay = date('l', strtotime(current_time("mysql", $gmt)));
 		
 		$day_map = array(
