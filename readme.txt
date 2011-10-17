@@ -20,6 +20,27 @@ The DJ On-Air Widget adds a "Dj Shifts" field to user profiles that allows the t
 
 == Frequently Asked Questions ==
 
+= How do I use the widget in my template or individual posts? =
+
+The widget can be embedded into posts usings the following shortcode:
+
+[dj-widget title="Current DJ On-Air" show_avatar="1" show_link="1" default_name="Some DJ"]
+
+title = The title that will appear above the name(s) of the current DJ(s) - (optional)
+show_avatar = Whether or not to display avatars, 1 for yes, 0 for no (optional - default is 0)
+show_link = Whether or not to link to profile page, 1 for yes, 0 for no (optional - default is 0)
+default_name = The name or text to display if no DJ is currently scheduled
+
+To use it in a template file include the following PHP code:
+<?php echo do_shortcode('[dj-widget title="Current DJ On-Air" show_avatar="1" show_link="1" default_name="Some DJ"]'); ?>
+
+or
+ 
+<?php
+$args = array("title" => "Current DJ On-Air", "show_avatar" => 1, "show_link" => 1, "default_name" => "Some DJ");
+echo dj_show_widget($args);
+?>
+
 = Can I set it so that only certain roles can add schedules to user accounts?  I don't want Subscribers to start adding themselves to the widget. =
 
 Yes, as of version 0.2.  The options page is under the Settings tab.
@@ -38,6 +59,9 @@ Yes.  If two users are scheduled for the same hour on the same day, they will bo
 
 == Changelog ==
 
+= 0.2.2 =
+* Added shortcode so that the widget can be used outside of the sidebar
+
 = 0.2.1 =
 * Fixed a bug that was causing problems with schedules before 10am
 
@@ -48,6 +72,9 @@ Yes.  If two users are scheduled for the same hour on the same day, they will bo
 * Initial release
 
 == Upgrade Notice ==
+
+= 0.2.2 =
+* Added shortcode so that the widget can be used outside of the sidebar
 
 = 0.2.1 =
 * Fixed a bug that was causing problems with schedules before 10am

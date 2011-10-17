@@ -1,14 +1,14 @@
 <?php
 /**
 * @package DJ_On_Air_Widget
-* @version 0.2
+* @version 0.2.2
 */
 /*
 Plugin Name: DJ On Air Widget
 Plugin URI: http://nlb-creations.com/2011/09/02/wordpress-plugin-dj-on-air-widget/
 Description: This plugin adds additional fields to user profiles to designate users as DJs and provide shift scheduling.
 Author: Nikki Blight <nblight@nlb-creations.com>
-Version: 0.2.1
+Version: 0.2.2
 Author URI: http://www.nlb-creations.com
 */
 
@@ -36,6 +36,91 @@ add_action( 'init', 'set_globals' );
 if ( !is_admin() ) {
 	$dir = WP_PLUGIN_URL.'/'.str_replace(basename( __FILE__),"",plugin_basename(__FILE__));
 	wp_enqueue_style( 'dj-on-air', $dir.'/styles/djonair.css' );
+}
+
+//shortcode function for current DJ on-air
+function dj_show_widget($atts) {
+	extract( shortcode_atts( array(
+		'title' => '',	
+		'show_avatar' => 0,
+		'show_link' => 0,
+		'default_name' => ''
+	), $atts ) );
+	
+	//find out which DJ(s) are currently scheduled to be on-air and display them
+	$djs = dj_get_current();
+	
+	$dj_str = '';
+	
+	$dj_str .= '<div class="on-air-embedded">';
+	if($title != '') {
+		$dj_str .= '<h3>'.$title.'</h3>';
+	}
+	$dj_str .= '<ul class="on-air-list">';
+	if(count($djs) > 0) {
+		foreach($djs as $dj) {
+			$dj_str .= '<li class="on-air-dj">';
+			if($show_avatar) {
+				$dj_str .= '<span class="on-air-dj-avatar">'.get_avatar($dj->ID).'</span>';
+			}
+			
+			if($show_link) {
+				$dj_str .= '<a href="';
+				$dj_str .= get_author_posts_url($dj->ID);
+				$dj_str .= '">';
+				$dj_str .= $dj->display_name.'</a>';
+			}
+			else {
+				$dj_str .= $dj->display_name;
+			}
+			$dj_str .= '<span class="clear"></span></li>';
+		}
+	}
+	else {
+		$dj_str .= '<li class="on-air-dj default-dj">'.$default_name.'</li>';
+	}
+	$dj_str .= '</ul>';
+	$dj_str .= '</div>';
+	
+	return $dj_str;
+	
+}
+add_shortcode( 'dj-widget', 'dj_show_widget');
+
+//fetch the current DJ(s) on-air
+function dj_get_current() {	
+	//load the info for the DJ
+	global $wpdb;
+	
+	//get the current time
+	$now = date('H', strtotime(current_time("mysql", $gmt)));
+	$curDay = date('l', strtotime(current_time("mysql", $gmt)));
+	
+	$day_map = array(
+					'Monday' => '{s:3:"day";s:6:"Monday";',
+					'Tuesday' => '{s:3:"day";s:7:"Tuesday";',
+					'Wednesday' => '{s:3:"day";s:9:"Wednesday";',
+					'Thursday' => '{s:3:"day";s:8:"Thursday";',
+					'Friday' => '{s:3:"day";s:6:"Friday";',
+					'Saturday' => '{s:3:"day";s:8:"Saturday";',
+					'Sunday' => '{s:3:"day";s:6:"Sunday";'
+				);
+	
+	$serializedDayTime = $day_map[$curDay].'s:4:"time";s:5:"'.$now.':00";}';
+	
+	
+	$dj_ids = $wpdb->get_results("SELECT `meta`.`user_id` FROM ".$wpdb->prefix."usermeta AS `meta`
+											WHERE `meta_key` = 'shifts' 
+											AND `meta_value` LIKE '%".$serializedDayTime."%';"   
+											);
+	$djs = array();
+	foreach($dj_ids as $id) {
+		$fetch = $wpdb->get_row("SELECT * FROM ".$wpdb->prefix."users AS `user` WHERE `user`.`ID` = ".$id->user_id.";");
+		
+		$djs[] = $fetch;
+	}
+	
+	return $djs;
 }
 
 //show the extra fields on the user profile form and load the widget
@@ -261,37 +346,8 @@ class DJ_Widget extends WP_Widget {
 		$link = $instance['link'];
  		$default = empty($instance['default']) ? '' : $instance['default'];
 		
- 
-		//load the info for the DJ
-		global $wpdb;
-		
-		//get the current time
-		$now = date('H', strtotime(current_time("mysql", $gmt)));
-		$curDay = date('l', strtotime(current_time("mysql", $gmt)));
-		
-		$day_map = array(
-						'Monday' => '{s:3:"day";s:6:"Monday";',
-						'Tuesday' => '{s:3:"day";s:7:"Tuesday";',
-						'Wednesday' => '{s:3:"day";s:9:"Wednesday";',
-						'Thursday' => '{s:3:"day";s:8:"Thursday";',
-						'Friday' => '{s:3:"day";s:6:"Friday";',
-						'Saturday' => '{s:3:"day";s:8:"Saturday";',
-						'Sunday' => '{s:3:"day";s:6:"Sunday";'
-					);
-		
-		$serializedDayTime = $day_map[$curDay].'s:4:"time";s:5:"'.$now.':00";}';
-		
-		
-		$dj_ids = $wpdb->get_results("SELECT `meta`.`user_id` FROM ".$wpdb->prefix."usermeta AS `meta`
-												WHERE `meta_key` = 'shifts' 
-												AND `meta_value` LIKE '%".$serializedDayTime."%';"   
-												);
-		$djs = array();
-		foreach($dj_ids as $id) {
-			$fetch = $wpdb->get_row("SELECT * FROM ".$wpdb->prefix."users AS `user` WHERE `user`.`ID` = ".$id->user_id.";");
-			
-			$djs[] = $fetch;
-		}
+ 		//fetch the current DJs
+		$djs = dj_get_current();
 		
 		?>
 		<div class="widget">
