@@ -1,14 +1,14 @@
 <?php
 /**
 * @package DJ_On_Air_Widget
-* @version 0.2.2
+* @version 0.2.3
 */
 /*
 Plugin Name: DJ On Air Widget
 Plugin URI: http://nlb-creations.com/2011/09/02/wordpress-plugin-dj-on-air-widget/
 Description: This plugin adds additional fields to user profiles to designate users as DJs and provide shift scheduling.
 Author: Nikki Blight <nblight@nlb-creations.com>
-Version: 0.2.2
+Version: 0.2.3
 Author URI: http://www.nlb-creations.com
 */
 
@@ -94,7 +94,38 @@ function dj_get_current() {
 	
 	//get the current time
 	$now = date('H', strtotime(current_time("mysql", $gmt)));
+	$min = date('i', strtotime(current_time("mysql", $gmt)));
 	$curDay = date('l', strtotime(current_time("mysql", $gmt)));
+	
+	//take the time settings into account... are we looking for 15 minute shifts, half hour shifts, or hours shifts
+	$time_settings = get_option('dj_time_settings');
+	
+	
+	if($time_settings == 'quarterhour') {
+		if($min < 15) {
+			$now = $now.':00';
+		}
+		elseif($min >= 15 && $min < 30) {
+			$now = $now.':15';
+		}
+		elseif($min >= 30 && $min < 45) {
+			$now = $now.':30';
+		}
+		else {
+			$now = $now.':45';
+		}
+	}
+	elseif($time_settings == 'halfhour') {
+		if($min < 30) {
+			$now = $now.':00';
+		}
+		else {
+			$now = $now.':30';
+		}
+	}
+	else {
+		$now = $now.':00';
+	}
 	
 	$day_map = array(
 					'Monday' => '{s:3:"day";s:6:"Monday";',
@@ -106,7 +137,7 @@ function dj_get_current() {
 					'Sunday' => '{s:3:"day";s:6:"Sunday";'
 				);
 	
-	$serializedDayTime = $day_map[$curDay].'s:4:"time";s:5:"'.$now.':00";}';
+	$serializedDayTime = $day_map[$curDay].'s:4:"time";s:5:"'.$now.'";}';
 	
 	
 	$dj_ids = $wpdb->get_results("SELECT `meta`.`user_id` FROM ".$wpdb->prefix."usermeta AS `meta`
@@ -175,30 +206,52 @@ function dj_show_extra_profile_fields( $user ) {
 	            		Time: 
 	            		<select name="shifts[<?php echo $c; ?>][time]">
 	            			<option value=""></option>
-	            			<option value="00:00"<?php if($track['time'] == "00:00") { echo ' selected="selected"'; } ?>>12am</option>
-	            			<option value="01:00"<?php if($track['time'] == "01:00") { echo ' selected="selected"'; } ?>>1am</option>
-	            			<option value="02:00"<?php if($track['time'] == "02:00") { echo ' selected="selected"'; } ?>>2am</option>
-	            			<option value="03:00"<?php if($track['time'] == "03:00") { echo ' selected="selected"'; } ?>>3am</option>
-	            			<option value="04:00"<?php if($track['time'] == "04:00") { echo ' selected="selected"'; } ?>>4am</option>
-	            			<option value="05:00"<?php if($track['time'] == "05:00") { echo ' selected="selected"'; } ?>>5am</option>
-	            			<option value="06:00"<?php if($track['time'] == "06:00") { echo ' selected="selected"'; } ?>>6am</option>
-	            			<option value="07:00"<?php if($track['time'] == "07:00") { echo ' selected="selected"'; } ?>>7am</option>
-	            			<option value="08:00"<?php if($track['time'] == "08:00") { echo ' selected="selected"'; } ?>>8am</option>
-	            			<option value="09:00"<?php if($track['time'] == "09:00") { echo ' selected="selected"'; } ?>>9am</option>
-	            			<option value="10:00"<?php if($track['time'] == "10:00") { echo ' selected="selected"'; } ?>>10am</option>
-	            			<option value="11:00"<?php if($track['time'] == "11:00") { echo ' selected="selected"'; } ?>>11am</option>
-	            			<option value="12:00"<?php if($track['time'] == "12:00") { echo ' selected="selected"'; } ?>>12pm</option>
-	            			<option value="13:00"<?php if($track['time'] == "13:00") { echo ' selected="selected"'; } ?>>1pm</option>
-	            			<option value="14:00"<?php if($track['time'] == "14:00") { echo ' selected="selected"'; } ?>>2pm</option>
-	            			<option value="15:00"<?php if($track['time'] == "15:00") { echo ' selected="selected"'; } ?>>3pm</option>
-	            			<option value="16:00"<?php if($track['time'] == "16:00") { echo ' selected="selected"'; } ?>>4pm</option>
-	            			<option value="17:00"<?php if($track['time'] == "17:00") { echo ' selected="selected"'; } ?>>5pm</option>
-	            			<option value="18:00"<?php if($track['time'] == "18:00") { echo ' selected="selected"'; } ?>>6pm</option>
-	            			<option value="19:00"<?php if($track['time'] == "19:00") { echo ' selected="selected"'; } ?>>7pm</option>
-	            			<option value="20:00"<?php if($track['time'] == "20:00") { echo ' selected="selected"'; } ?>>8pm</option>
-	            			<option value="21:00"<?php if($track['time'] == "21:00") { echo ' selected="selected"'; } ?>>9pm</option>
-	            			<option value="22:00"<?php if($track['time'] == "22:00") { echo ' selected="selected"'; } ?>>10pm</option>
-	            			<option value="23:00"<?php if($track['time'] == "23:00") { echo ' selected="selected"'; } ?>>11pm</option>
+	            		<?php for($i=0; $i<24; $i++): ?>
+	            			<?php 
+	            				//we need to store time in 24 hour format, but display in 12 hour format, so we need to do a little manipulation here
+	            				$hour = $i;
+	            				if($i >= 12) {
+	            					if($i == 12) {
+	            						$hour = 12;
+	            					}
+	            					else {
+	            						$hour = $hour - 12;
+	            					}
+	            					$meridian = 'pm';
+	            				}
+	            				else {
+	            					$meridian = 'am';
+			    					if($i == 0) {
+			    						$hour = 12;
+			    					}
+	            				}
+	            				
+	            				if($i < 10) {
+									$i = "0".$i;
+	            				}
+	            				
+	            				//now we figure out what increments we need
+	            				$time_settings = get_option('dj_time_settings');
+	            				
+	            				//if the time settings are not set, set them now to the default of 1 hour
+	            				if(!$time_settings) {
+	            					$time_settings = "hour";
+	            					update_option('dj_time_settings', $time_settings);
+	            				}
+	            			?>
+	            			<?php if($time_settings == 'quarterhour'): ?>
+	            			<option value="<?php echo $i; ?>:00"<?php if($track['time'] == $i.":00") { echo ' selected="selected"'; } ?>><?php echo $hour; ?>:00 <?php echo $meridian; ?></option>
+	            			<option value="<?php echo $i; ?>:15"<?php if($track['time'] == $i.":15") { echo ' selected="selected"'; } ?>><?php echo $hour; ?>:15 <?php echo $meridian; ?></option>
+	            			<option value="<?php echo $i; ?>:30"<?php if($track['time'] == $i.":30") { echo ' selected="selected"'; } ?>><?php echo $hour; ?>:30 <?php echo $meridian; ?></option>
+	            			<option value="<?php echo $i; ?>:45"<?php if($track['time'] == $i.":45") { echo ' selected="selected"'; } ?>><?php echo $hour; ?>:45 <?php echo $meridian; ?></option>
+	            			<?php elseif($time_settings == 'halfhour'): ?>
+	            			<option value="<?php echo $i; ?>:00"<?php if($track['time'] == $i.":00") { echo ' selected="selected"'; } ?>><?php echo $hour; ?>:00 <?php echo $meridian; ?></option>
+	            			<option value="<?php echo $i; ?>:30"<?php if($track['time'] == $i.":30") { echo ' selected="selected"'; } ?>><?php echo $hour; ?>:30 <?php echo $meridian; ?></option>
+	            			<?php else: ?>
+	            			<option value="<?php echo $i; ?>:00"<?php if($track['time'] == $i.":00") { echo ' selected="selected"'; } ?>><?php echo $hour; ?>:00 <?php echo $meridian; ?></option>
+	            			<?php endif; ?>
+	            			
+	            		<?php endfor; ?>
 	            		</select> 
 	            		<span class="remove" style="cursor: pointer; color: #ff0000;">Remove</span>
 	            	</p>
@@ -230,30 +283,56 @@ function dj_show_extra_profile_fields( $user ) {
 				output += '</select>';
 				output += ' - Time: ';
 				output += '<select name="shifts[' + count + '][time]">';
-				output += '<option value="00:00">12am</option>';
-				output += '<option value="01:00">1am</option>';
-				output += '<option value="02:00">2am</option>';
-				output += '<option value="03:00">3am</option>';
-				output += '<option value="04:00">4am</option>';
-				output += '<option value="05:00">5am</option>';
-				output += '<option value="06:00">6am</option>';
-				output += '<option value="07:00">7am</option>';
-				output += '<option value="08:00">8am</option>';
-				output += '<option value="09:00">9am</option>';
-				output += '<option value="10:00">10am</option>';
-				output += '<option value="11:00">11am</option>';
-				output += '<option value="12:00">12pm</option>';
-				output += '<option value="13:00">1pm</option>';
-				output += '<option value="14:00">2pm</option>';
-				output += '<option value="15:00">3pm</option>';
-				output += '<option value="16:00">4pm</option>';
-				output += '<option value="17:00">5pm</option>';
-				output += '<option value="18:00">6pm</option>';
-				output += '<option value="19:00">7pm</option>';
-				output += '<option value="20:00">8pm</option>';
-				output += '<option value="21:00">9pm</option>';
-				output += '<option value="22:00">10pm</option>';
-				output += '<option value="23:00">11pm</option>';
+
+
+				<?php for($i=0; $i<24; $i++): ?>
+    			<?php 
+    				//we need to store time in 24 hour format, but display in 12 hour format, so we need to do a little manipulation here
+    				$hour = $i;
+    				if($i >= 12) {
+    					if($i == 12) {
+            				$hour = 12;
+						}
+           				else {
+            				$hour = $hour - 12;
+            			}
+    					$meridian = 'pm';
+    				}
+    				else {
+    					$meridian = 'am';
+    					if($i == 0) {
+    						$hour = 12;
+    						$meridian = 'am';
+    					}
+    				}
+    				
+    				if($i < 10) {
+						$i = "0".$i;
+    				}
+    				
+    				//now we figure out what increments we need
+    				$time_settings = get_option('dj_time_settings');
+    				
+    				//if the time settings are not set, set them now to the default of 1 hour
+    				if(!$time_settings) {
+    					$time_settings = "hour";
+    					update_option('dj_time_settings', $time_settings);
+    				}
+    			?>
+				<?php if($time_settings == 'quarterhour'): ?>
+    			output += '<option value="<?php echo $i; ?>:00"><?php echo $hour; ?>:00 <?php echo $meridian; ?></option>';
+    			output += '<option value="<?php echo $i; ?>:15"><?php echo $hour; ?>:15 <?php echo $meridian; ?></option>';
+    			output += '<option value="<?php echo $i; ?>:30"><?php echo $hour; ?>:30 <?php echo $meridian; ?></option>';
+    			output += '<option value="<?php echo $i; ?>:45"><?php echo $hour; ?>:45 <?php echo $meridian; ?></option>';
+    			<?php elseif($time_settings == 'halfhour'): ?>
+    			output += '<option value="<?php echo $i; ?>:00"><?php echo $hour; ?>:00 <?php echo $meridian; ?></option>';
+    			output += '<option value="<?php echo $i; ?>:30"><?php echo $hour; ?>:30 <?php echo $meridian; ?></option>';
+    			<?php else: ?>
+    			output += '<option value="<?php echo $i; ?>:00"><?php echo $hour; ?>:00 <?php echo $meridian; ?></option>';
+    			<?php endif; ?>
+
+				<?php endfor; ?>
+
 				output += '</select> ';
 				output += '<span class="remove" style="cursor: pointer; color: #ff0000;">Remove</span></p>';
 	            $('#here').append( output );
@@ -448,6 +527,7 @@ function admin_options() {
  
 		//update options settings
 		update_option('dj_access_roles', $defaultOptionVals);
+		update_option('dj_time_settings', $_POST['dj_time_settings']);
  
 		//show success
 		echo '<div id="message" class="updated fade"><p><strong>' . __('Your configuration settings have been saved.') . '</strong></p></div>';
@@ -479,6 +559,21 @@ function admin_options() {
 			<tr valign="top">
 				<th scope="row">&nbsp;</th>
 					<td>Please select all user roles that should be allowed to add DJ schedules to user accounts.</td>
+			</tr>
+			<tr valign="top">
+				<th scope="row">Shift Length</th>
+				<td>
+					<?php $time_settings = get_option('dj_time_settings'); ?>
+					<select name="dj_time_settings" id="dj_time_settings">
+						<option value="hour" <?php if($time_settings == 'hour') { echo 'selected="selected"'; } ?>>Hour</option>
+						<option value="halfhour" <?php if($time_settings == 'halfhour') { echo 'selected="selected"'; } ?>>Half-Hour</option>
+						<option value="quarterhour" <?php if($time_settings == 'quarterhour') { echo 'selected="selected"'; } ?>>15 Minutes</option>
+					</select>
+				</td>
+			</tr>
+			<tr valign="top">
+				<th scope="row">&nbsp;</th>
+					<td>Please select the length of a DJ's shift.</td>
 			</tr>
 			<tr valign="top">
 				<th scope="row">&nbsp;</th>

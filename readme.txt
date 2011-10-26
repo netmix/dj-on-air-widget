@@ -15,10 +15,15 @@ The DJ On-Air Widget adds a "Dj Shifts" field to user profiles that allows the t
 
 1. Upload plugin .zip file to the `/wp-content/plugins/` directory and unzip.
 2. Activate the plugin through the 'Plugins' menu in WordPress
-3. When editing users, you will now find a "DJ shifts" field at the bottom of the form.  Use this to set up your on-air schedule for any user.  
-4. Add the DJ On-Air widget to your site's sidebar and set it's options. 
+3. Under Settings > DJ On-Air, set your shift length and role access for the plugin.
+4. When editing users, you will now find a "DJ shifts" field at the bottom of the form.  Use this to set up your on-air schedule for any user.  
+5. Add the DJ On-Air widget to your site's sidebar and set it's options. 
 
 == Frequently Asked Questions ==
+
+= Can I change the length of a shift? =
+
+As of version 0.2.3, yes.  Under Settings > DJ On-Air, you can select hour, half-hour, or 15 minute shifts.
 
 = How do I use the widget in my template or individual posts? =
 
@@ -32,14 +37,13 @@ show_link = Whether or not to link to profile page, 1 for yes, 0 for no (optiona
 default_name = The name or text to display if no DJ is currently scheduled
 
 To use it in a template file include the following PHP code:
-<?php echo do_shortcode('[dj-widget title="Current DJ On-Air" show_avatar="1" show_link="1" default_name="Some DJ"]'); ?>
+
+echo do_shortcode('[dj-widget title="Current DJ On-Air" show_avatar="1" show_link="1" default_name="Some DJ"]'); 
 
 or
  
-<?php
 $args = array("title" => "Current DJ On-Air", "show_avatar" => 1, "show_link" => 1, "default_name" => "Some DJ");
 echo dj_show_widget($args);
-?>
 
 = Can I set it so that only certain roles can add schedules to user accounts?  I don't want Subscribers to start adding themselves to the widget. =
 
@@ -59,6 +63,9 @@ Yes.  If two users are scheduled for the same hour on the same day, they will bo
 
 == Changelog ==
 
+= 0.2.3 =
+* Added the ability to change the length of shifts
+
 = 0.2.2 =
 * Added shortcode so that the widget can be used outside of the sidebar
 
@@ -72,6 +79,9 @@ Yes.  If two users are scheduled for the same hour on the same day, they will bo
 * Initial release
 
 == Upgrade Notice ==
+
+= 0.2.3 =
+* Added the ability to change the length of shifts
 
 = 0.2.2 =
 * Added shortcode so that the widget can be used outside of the sidebar
