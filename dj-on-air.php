@@ -1,36 +1,36 @@
 <?php
 /**
 * @package DJ_On_Air_Widget
-* @version 0.2.3
+* @version 0.2.4
 */
 /*
 Plugin Name: DJ On Air Widget
 Plugin URI: http://nlb-creations.com/2011/09/02/wordpress-plugin-dj-on-air-widget/
 Description: This plugin adds additional fields to user profiles to designate users as DJs and provide shift scheduling.
 Author: Nikki Blight <nblight@nlb-creations.com>
-Version: 0.2.3
+Version: 0.2.4
 Author URI: http://www.nlb-creations.com
 */
 
-global $defaultOptionVals;
+global $djDefaultOptionVals;
 
 //set the default options, or, if they've already been customized, load the options.
-function set_globals() {
-	global $defaultOptionVals;
+function dj_set_globals() {
+	global $djDefaultOptionVals;
 	
 	$options = get_option('dj_access_roles');
 	
 	if(!$options) {
-		$defaultOptionVals = array(
+		$djDefaultOptionVals = array(
 			'roles' => array('administrator')
 		);
-		update_option('dj_access_roles', $defaultOptionVals);
+		update_option('dj_access_roles', $djDefaultOptionVals);
 	}
 	else {
-		$defaultOptionVals = $options;
+		$djDefaultOptionVals = $options;
 	}
 }
-add_action( 'init', 'set_globals' );
+add_action( 'init', 'dj_set_globals' );
 
 //add the stylesheet to the frontend theme
 if ( !is_admin() ) {
@@ -163,7 +163,7 @@ add_action( 'edit_user_profile', 'dj_show_extra_profile_fields' );
 * and http://justintadlock.com/archives/2009/09/10/adding-and-using-custom-user-profile-fields
 */
 function dj_show_extra_profile_fields( $user ) { 
-	if(!hasPluginAccess()) {
+	if(!dj_hasPluginAccess()) {
 		return false;
 	}
 	?>
@@ -476,9 +476,9 @@ class DJ_Widget extends WP_Widget {
 /* Admin Functions */
 
 //check to see if the user has access to make changes
-function hasPluginAccess() {
+function dj_hasPluginAccess() {
 	global $user_ID;
-	global $defaultOptionVals;
+	global $djDefaultOptionVals;
 	
 	//ensure we have a logged in user
 	if (!empty($user_ID)) {
@@ -486,7 +486,7 @@ function hasPluginAccess() {
 		
 		if (!is_array($user->roles)) $user->roles = array($user->roles);
 		foreach ($user->roles as $role) {
-			if (in_array($role, $defaultOptionVals['roles'])) {
+			if (in_array($role, $djDefaultOptionVals['roles'])) {
 				return true;
 			}
 		}
@@ -496,16 +496,16 @@ function hasPluginAccess() {
 }
 
 //create a menu item for the options page
-function admin_menu() {
+function dj_admin_menu() {
 	if (function_exists('add_options_page')) {
-		add_options_page('DJ On-Air Options', 'DJ On-Air', 'manage_options', 'dj-on-air-widget', 'admin_options');
+		add_options_page('DJ On-Air Options', 'DJ On-Air', 'manage_options', 'dj-on-air-widget', 'dj_admin_options');
 	}
 }
-add_action( 'init', 'admin_menu' );
+add_action( 'admin_menu', 'dj_admin_menu' );
 
 //output the options page
-function admin_options() {
-	global $defaultOptionVals;
+function dj_admin_options() {
+	global $djDefaultOptionVals;
 	
 	
 	//grab the array of all user roles
@@ -523,10 +523,10 @@ function admin_options() {
 		}
  
     	//update the new value
-		$defaultOptionVals['roles'] = $_POST['dj_access_roles'];
+		$djDefaultOptionVals['roles'] = $_POST['dj_access_roles'];
  
 		//update options settings
-		update_option('dj_access_roles', $defaultOptionVals);
+		update_option('dj_access_roles', $djDefaultOptionVals);
 		update_option('dj_time_settings', $_POST['dj_time_settings']);
  
 		//show success
@@ -549,7 +549,7 @@ function admin_options() {
 					<?php
 						if (!empty($roles)) {
 							foreach ($roles as $role) {
-								echo '<option value="' . $role . '"' . (in_array($role, $defaultOptionVals['roles']) ? ' selected="selected"' : '') . '>' . $role . '</option>';
+								echo '<option value="' . $role . '"' . (in_array($role, $djDefaultOptionVals['roles']) ? ' selected="selected"' : '') . '>' . $role . '</option>';
 							}
 						}
 					?>

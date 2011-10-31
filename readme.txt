@@ -2,7 +2,7 @@
 Contributors: kionae
 Tags: dj, music, radio, scheduling
 Requires at least: 3.2.0
-Tested up to: 3.2.1
+Tested up to: 3.3-beta2
 Stable tag: trunk
 
 Sidebar widget that displays the name, avatar, and profile link of a user scheduled to be "on-air" during the current hour.
@@ -63,6 +63,10 @@ Yes.  If two users are scheduled for the same hour on the same day, they will bo
 
 == Changelog ==
 
+= 0.2.4 =
+* Fixed a conflict DJ On-Air Widget had another plugin
+* Fixed the admin menu in Wordpress 3.3
+
 = 0.2.3 =
 * Added the ability to change the length of shifts
 
@@ -79,6 +83,10 @@ Yes.  If two users are scheduled for the same hour on the same day, they will bo
 * Initial release
 
 == Upgrade Notice ==
+
+= 0.2.4 =
+* Fixed a conflict DJ On-Air Widget had another plugin
+* Fixed the admin menu in Wordpress 3.3
 
 = 0.2.3 =
 * Added the ability to change the length of shifts
