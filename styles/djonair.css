@@ -1,3 +1,4 @@
+/* Widget layout */
 .on-air-dj-avatar {
 	float: left;
 	padding-right: 15px;
@@ -20,3 +21,18 @@
 .widget .on-air-list li {
 	font-size: 2em;
 }
+
+/* Schedule layout */
+.on-air-dj-schedule-day-block {
+	float: left;
+	margin-right: 25px;
+}
+
+.on-air-dj-schedule-day-title {}
+.on-air-dj-schedule-time-list {}
+.on-air-dj-schedule-time-item {}
+.on-air-dj-schedule-dj-list {}
+.on-air-dj-schedule-dj-item {}
+.on-air-no-dj { font-style: italics; }
+.on-air-dj-schedule-dj-item {}
+.scheduled-dj {}

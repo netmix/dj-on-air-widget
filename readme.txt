@@ -21,6 +21,10 @@ The DJ On-Air Widget adds a "Dj Shifts" field to user profiles that allows the t
 
 == Frequently Asked Questions ==
 
+= Can I display a full schedule of my DJs? =
+
+Yes, as of version 0.2.5.  Use the shortcode [dj-schedule] in any page or post.  The name of the default DJ can be set on the plugin's options page under settings, and styles for the schedule output can be changed in dj-on-air-wdiget/styles/djonair.css.
+
 = Can I change the length of a shift? =
 
 As of version 0.2.3, yes.  Under Settings > DJ On-Air, you can select hour, half-hour, or 15 minute shifts.
@@ -63,6 +67,9 @@ Yes.  If two users are scheduled for the same hour on the same day, they will bo
 
 == Changelog ==
 
+= 0.2.5 =
+* Added shortcode to output a full schedule on any page or post.
+
 = 0.2.4 =
 * Fixed a conflict DJ On-Air Widget had another plugin
 * Fixed the admin menu in Wordpress 3.3
@@ -83,6 +90,9 @@ Yes.  If two users are scheduled for the same hour on the same day, they will bo
 * Initial release
 
 == Upgrade Notice ==
+
+= 0.2.5 =
+* Added shortcode to output a full schedule on any page or post.
 
 = 0.2.4 =
 * Fixed a conflict DJ On-Air Widget had another plugin

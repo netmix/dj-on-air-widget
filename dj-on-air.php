@@ -1,14 +1,14 @@
 <?php
 /**
 * @package DJ_On_Air_Widget
-* @version 0.2.4
+* @version 0.2.5
 */
 /*
 Plugin Name: DJ On Air Widget
 Plugin URI: http://nlb-creations.com/2011/09/02/wordpress-plugin-dj-on-air-widget/
 Description: This plugin adds additional fields to user profiles to designate users as DJs and provide shift scheduling.
 Author: Nikki Blight <nblight@nlb-creations.com>
-Version: 0.2.4
+Version: 0.2.5
 Author URI: http://www.nlb-creations.com
 */
 
@@ -86,6 +86,88 @@ function dj_show_widget($atts) {
 	
 }
 add_shortcode( 'dj-widget', 'dj_show_widget');
+
+//shortcode to display a full schedule od DJs
+function dj_schedule() {
+	global $wpdb;
+	
+	//set up the structure of the master schedule
+	$default_dj = get_option('dj_default_name');
+	$time_settings = get_option('dj_time_settings');
+	$master_list = array('Sunday' => array(), 'Monday' => array(), 'Tuesday' => array(), 'Wednesday' => array(), 'Thursday' => array(), 'Friday' => array(), 'Saturday' => array());
+	
+	foreach($master_list as $day => $times) {
+		for($i=0; $i<24; $i++) {
+			$zero = '';
+			if($i < 10) {
+				$zero = '0';
+			}
+			
+			if($time_settings == 'quarterhour') {
+				$master_list[$day][$zero.$i.':00'] = array();
+				$master_list[$day][$zero.$i.':15'] = array();
+				$master_list[$day][$zero.$i.':30'] = array();
+				$master_list[$day][$zero.$i.':45'] = array();
+			}
+			elseif($time_settings == 'halfhour') {
+				$master_list[$day][$zero.$i.':00'] = array();
+				$master_list[$day][$zero.$i.':30'] = array();
+			}
+			else {
+				$master_list[$day][$zero.$i.':00'] = array();
+			}
+		}
+	}	
+	
+	//pull all users who have dj schedules set
+	$djs = $wpdb->get_results("SELECT `meta`.`user_id` FROM ".$wpdb->prefix."usermeta AS `meta`
+											WHERE `meta_key` = 'shifts';"
+											);
+	
+	//insert the djs into the master schedule
+	foreach($djs as $dj) {
+		$shifts = get_user_meta($dj->user_id,'shifts',false);
+	   
+	    if(isset($shifts[0])) {
+	    	$shifts = unserialize($shifts[0]);	
+	    }
+		
+		foreach($shifts as $shift) {
+			if(isset($master_list[$shift['day']][$shift['time']])) {
+				$master_list[$shift['day']][$shift['time']][] = $wpdb->get_row("SELECT * FROM ".$wpdb->prefix."users AS `user` WHERE `user`.`ID` = ".$dj->user_id.";");
+			}
+		}
+	}
+	
+	//format for output
+	$sched = '';
+	
+	foreach($master_list as $day => $times) {
+		$sched .= '<div class="on-air-dj-schedule-day-block"><h3 class="on-air-dj-schedule-day-title">'.$day.'</h3>';
+		
+		$sched .= '<ul class="on-air-dj-schedule-time-list">';
+		foreach($times as $time => $djs) {
+			$sched .= '<li class="on-air-dj-schedule-time-item">';
+			$sched .= date('g:i a', strtotime($time.':00')).': ';
+			
+			$sched .= '<ul class="on-air-dj-schedule-dj-list">';
+			if(empty($djs)) {
+				$sched .= '<li class="on-air-dj-schedule-dj-item on-air-no-dj">'.$default_dj.'</li>';
+			}
+			else {
+				foreach($djs as $dj) {
+					$sched .= '<li class="on-air-dj-schedule-dj-item scheduled-dj on-air-dj-id-'.$dj->user_id.'">'.$dj->display_name.'</li>';
+				}
+			}
+			$sched .= '</ul>';
+			$sched .= '</li>';
+		}
+		$sched .= '</ul></div>';
+	}
+	
+	return $sched;
+}
+add_shortcode( 'dj-schedule', 'dj_schedule');
 
 //fetch the current DJ(s) on-air
 function dj_get_current() {	
@@ -528,6 +610,7 @@ function dj_admin_options() {
 		//update options settings
 		update_option('dj_access_roles', $djDefaultOptionVals);
 		update_option('dj_time_settings', $_POST['dj_time_settings']);
+		update_option('dj_default_name', $_POST['dj_default_name']);
  
 		//show success
 		echo '<div id="message" class="updated fade"><p><strong>' . __('Your configuration settings have been saved.') . '</strong></p></div>';
@@ -574,6 +657,17 @@ function dj_admin_options() {
 			<tr valign="top">
 				<th scope="row">&nbsp;</th>
 					<td>Please select the length of a DJ's shift.</td>
+			</tr>
+			<tr valign="top">
+				<th scope="row">Default DJ on Schedule</th>
+				<td>
+					<?php $default_dj = get_option('dj_default_name'); ?>
+					<input type="text" name="dj_default_name" id="dj_default_name" value="<?php echo $default_dj; ?>" />
+				</td>
+			</tr>
+			<tr valign="top">
+				<th scope="row">&nbsp;</th>
+					<td>Enter the name or text to be displayed when no DJ is on-air (For use with the [dj-schedule] shortcode. The sidebar widget will still allow you to set this value separately.)</td>
 			</tr>
 			<tr valign="top">
 				<th scope="row">&nbsp;</th>
