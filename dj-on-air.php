@@ -1,14 +1,14 @@
 <?php
 /**
 * @package DJ_On_Air_Widget
-* @version 0.2.5
+* @version 0.2.6
 */
 /*
 Plugin Name: DJ On Air Widget
 Plugin URI: http://nlb-creations.com/2011/09/02/wordpress-plugin-dj-on-air-widget/
 Description: This plugin adds additional fields to user profiles to designate users as DJs and provide shift scheduling.
 Author: Nikki Blight <nblight@nlb-creations.com>
-Version: 0.2.5
+Version: 0.2.6
 Author URI: http://www.nlb-creations.com
 */
 
@@ -127,16 +127,18 @@ function dj_schedule() {
 	//insert the djs into the master schedule
 	foreach($djs as $dj) {
 		$shifts = get_user_meta($dj->user_id,'shifts',false);
-	   
+	   	
 	    if(isset($shifts[0])) {
 	    	$shifts = unserialize($shifts[0]);	
+	    	
+	    	if(is_array($shifts)) {
+				foreach($shifts as $shift) {
+					if(isset($master_list[$shift['day']][$shift['time']])) {
+						$master_list[$shift['day']][$shift['time']][] = $wpdb->get_row("SELECT * FROM ".$wpdb->prefix."users AS `user` WHERE `user`.`ID` = ".$dj->user_id.";");
+					}
+				}
+	    	}
 	    }
-		
-		foreach($shifts as $shift) {
-			if(isset($master_list[$shift['day']][$shift['time']])) {
-				$master_list[$shift['day']][$shift['time']][] = $wpdb->get_row("SELECT * FROM ".$wpdb->prefix."users AS `user` WHERE `user`.`ID` = ".$dj->user_id.";");
-			}
-		}
 	}
 	
 	//format for output

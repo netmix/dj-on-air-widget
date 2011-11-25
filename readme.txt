@@ -67,6 +67,9 @@ Yes.  If two users are scheduled for the same hour on the same day, they will bo
 
 == Changelog ==
 
+= 0.2.6 =
+* Bug fix in the dj-schedule shortcode function.
+
 = 0.2.5 =
 * Added shortcode to output a full schedule on any page or post.
 
@@ -90,6 +93,10 @@ Yes.  If two users are scheduled for the same hour on the same day, they will bo
 * Initial release
 
 == Upgrade Notice ==
+
+
+= 0.2.6 =
+* Bug fix in the dj-schedule shortcode function.
 
 = 0.2.5 =
 * Added shortcode to output a full schedule on any page or post.
