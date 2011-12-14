@@ -2,7 +2,7 @@
 Contributors: kionae
 Tags: dj, music, radio, scheduling
 Requires at least: 3.2.0
-Tested up to: 3.3-beta2
+Tested up to: 3.3
 Stable tag: trunk
 
 Sidebar widget that displays the name, avatar, and profile link of a user scheduled to be "on-air" during the current hour.
